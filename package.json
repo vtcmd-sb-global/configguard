@@ -1,6 +1,6 @@
 {
-  "name": "configguard",
-  "version": "0.1.0",
+  "name": "@aousaja/configguard",
+  "version": "0.1.1",
   "description": "Validate application configuration before deployment",
   "license": "MIT",
   "author": "Aousaja",
