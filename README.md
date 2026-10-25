@@ -20,7 +20,7 @@ ConfigGuard is a lightweight TypeScript utility that validates application confi
 ## Installation
 
 ```bash
-npm install configguard zod
+npm install @aousaja/configguard zod
 ```
 
 ## Quick Start
