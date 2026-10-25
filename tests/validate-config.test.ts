@@ -1,4 +1,3 @@
-
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { validateConfig } from "../src/validate-config.js";
@@ -50,9 +49,7 @@ describe("validateConfig", () => {
     expect(result.success).toBe(false);
 
     if (!result.success) {
-      expect(
-        result.errors.some((error) => error.path === "PORT"),
-      ).toBe(true);
+      expect(result.errors.some((error) => error.path === "PORT")).toBe(true);
     }
   });
 
@@ -62,13 +59,11 @@ describe("validateConfig", () => {
     expect(result.success).toBe(false);
 
     if (!result.success) {
-      expect(
-        result.errors.some((error) => error.path === "PORT"),
-      ).toBe(true);
+      expect(result.errors.some((error) => error.path === "PORT")).toBe(true);
 
-      expect(
-        result.errors.some((error) => error.path === "APP_NAME"),
-      ).toBe(true);
+      expect(result.errors.some((error) => error.path === "APP_NAME")).toBe(
+        true,
+      );
     }
   });
 
@@ -108,9 +103,7 @@ describe("validateConfig", () => {
 
     if (!result.success) {
       expect(
-        result.errors.some(
-          (error) => error.path === "DATABASE.HOST",
-        ),
+        result.errors.some((error) => error.path === "DATABASE.HOST"),
       ).toBe(true);
     }
   });
@@ -126,10 +119,7 @@ describe("validateConfig", () => {
 
     const result = validateConfig(
       {
-        SERVERS: [
-          { PORT: 8080 },
-          { PORT: "invalid" },
-        ],
+        SERVERS: [{ PORT: 8080 }, { PORT: "invalid" }],
       },
       serverSchema,
     );
@@ -138,9 +128,7 @@ describe("validateConfig", () => {
 
     if (!result.success) {
       expect(
-        result.errors.some(
-          (error) => error.path === "SERVERS.1.PORT",
-        ),
+        result.errors.some((error) => error.path === "SERVERS.1.PORT"),
       ).toBe(true);
     }
   });
@@ -191,6 +179,92 @@ describe("validateConfig", () => {
     if (result.success) {
       expect(result.data.APP_NAME).toBe("ConfigGuard");
       expect(result.data).not.toHaveProperty("EXTRA_FIELD");
+    }
+  });
+
+  it("escapes dots in literal property names", () => {
+    const unusualSchema = z.object({
+      "API.KEY": z.string().min(1),
+    });
+
+    const result = validateConfig(
+      {
+        "API.KEY": "",
+      },
+      unusualSchema,
+    );
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(result.errors[0].path).toBe("API\\.KEY");
+    }
+  });
+
+  it("uses the root path for invalid root input", () => {
+    const result = validateConfig(
+      null,
+      z.object({
+        APP_NAME: z.string(),
+      }),
+    );
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(result.errors[0].path).toBe("$");
+    }
+  });
+
+  it("rejects undefined root input", () => {
+    const result = validateConfig(
+      undefined,
+      z.object({
+        APP_NAME: z.string(),
+      }),
+    );
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(result.errors[0].path).toBe("$");
+    }
+  });
+
+  it("reports nested errors when an object is null", () => {
+    const nestedSchema = z.object({
+      DATABASE: z.object({
+        HOST: z.string(),
+      }),
+    });
+
+    const result = validateConfig({ DATABASE: null }, nestedSchema);
+
+    expect(result.success).toBe(false);
+
+    if (!result.success) {
+      expect(result.errors.some((error) => error.path === "DATABASE")).toBe(
+        true,
+      );
+    }
+  });
+
+  it("applies defaults and transformations together", () => {
+    const configSchema = z.object({
+      APP_NAME: z.string().trim(),
+      PORT: z.coerce.number().default(3000),
+    });
+
+    const result = validateConfig(
+      { APP_NAME: "  ConfigGuard  " },
+      configSchema,
+    );
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.APP_NAME).toBe("ConfigGuard");
+      expect(result.data.PORT).toBe(3000);
     }
   });
 });

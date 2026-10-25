@@ -13,6 +13,18 @@ export type ConfigValidationResult<T> =
       }>;
     };
 
+function formatPath(path: PropertyKey[]): string {
+  if (path.length === 0) {
+    return "$";
+  }
+
+  return path
+    .map((segment) =>
+      String(segment).replace(/\\/g, "\\\\").replace(/\./g, "\\."),
+    )
+    .join(".");
+}
+
 export function validateConfig<T>(
   input: unknown,
   schema: ZodType<T>,
@@ -23,7 +35,7 @@ export function validateConfig<T>(
     return {
       success: false,
       errors: result.error.issues.map((issue) => ({
-        path: issue.path.map(String).join("."),
+        path: formatPath(issue.path),
         message: issue.message,
       })),
     };
