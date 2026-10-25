@@ -1,0 +1,54 @@
+{
+  "name": "configguard",
+  "version": "0.1.0",
+  "description": "Validate application configuration before deployment",
+  "license": "MIT",
+  "author": "Aousaja",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vtcmd-sb-global/configguard.git"
+  },
+  "homepage": "https://github.com/vtcmd-sb-global/configguard#readme",
+  "bugs": {
+    "url": "https://github.com/vtcmd-sb-global/configguard/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "keywords": [
+    "configuration",
+    "validation",
+    "typescript",
+    "environment",
+    "developer-tools"
+  ],
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@typescript/typescript6": "^6.0.2",
+    "tsup": "^9.0.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
+  }
+}
