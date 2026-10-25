@@ -1,4 +1,3 @@
-
 name: ConfigGuard CI
 
 on:
@@ -46,3 +45,6 @@ jobs:
 
       - name: Test built package exports
         run: npm run test:package
+
+      - name: Test CLI
+        run: npm run test:cli

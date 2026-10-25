@@ -1,0 +1,62 @@
+export interface CliOptions {
+  command: string;
+  envPath: string;
+  schemaPath: string;
+  help: boolean;
+}
+
+export function parseArgs(args: string[]): CliOptions {
+  const options: CliOptions = {
+    command: "",
+    envPath: ".env",
+    schemaPath: "configguard.config.ts",
+    help: false,
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === "--help" || arg === "-h") {
+      options.help = true;
+      continue;
+    }
+
+    if (arg === "--env" || arg === "-e") {
+      const value = args[++i];
+
+      if (!value || value.startsWith("-")) {
+        throw new Error(`${arg} requires a file path.`);
+      }
+
+      options.envPath = value;
+      continue;
+    }
+
+    if (arg === "--schema" || arg === "-s") {
+      const value = args[++i];
+
+      if (!value || value.startsWith("-")) {
+        throw new Error(`${arg} requires a file path.`);
+      }
+
+      options.schemaPath = value;
+      continue;
+    }
+
+    if (arg.startsWith("-")) {
+      throw new Error(`Unknown option: ${arg}`);
+    }
+
+    if (options.command) {
+      throw new Error(`Unexpected argument: ${arg}`);
+    }
+
+    options.command = arg;
+  }
+
+  if (!options.help && options.command !== "validate") {
+    throw new Error("Unknown or missing command. Use --help for usage.");
+  }
+
+  return options;
+}

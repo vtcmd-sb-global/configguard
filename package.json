@@ -1,4 +1,7 @@
 {
+  "bin": {
+    "configguard": "./dist/cli/index.js"
+  },
   "name": "@aousaja/configguard",
   "version": "0.1.1",
   "description": "Validate application configuration before deployment",
@@ -28,12 +31,13 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts",
+    "build": "tsup src/index.ts src/cli/index.ts --format esm --dts",
     "test": "vitest run tests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run test:package",
-    "test:package": "node --test scripts/package.test.mjs"
+    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run test:package && npm run test:cli",
+    "test:package": "node --test scripts/package.test.mjs",
+    "test:cli": "node --test scripts/cli.test.mjs"
   },
   "keywords": [
     "configuration",
@@ -43,6 +47,8 @@
     "developer-tools"
   ],
   "dependencies": {
+    "dotenv": "^18.0.9",
+    "tsx": "^4.23.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
