@@ -135,7 +135,7 @@ npm install ajv
 Then create a JSON Schema and pass Ajv's compiled validator to `AjvAdapter`:
 
 ```ts
-import { Ajv, type JSONSchemaType } from "ajv";
+import Ajv, { type JSONSchemaType } from "ajv";
 import { AjvAdapter } from "@aousaja/configguard";
 
 interface AppConfig {
