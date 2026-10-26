@@ -236,11 +236,11 @@ npm exec --yes --package=@aousaja/configguard -- configguard --help
 
 ### CLI options
 
-| Option | Description |
-|---|---|
-| `-e, --env` | Environment file path. Defaults to `.env`. |
+| Option         | Description                                                  |
+| -------------- | ------------------------------------------------------------ |
+| `-e, --env`    | Environment file path. Defaults to `.env`.                   |
 | `-s, --schema` | TypeScript schema path. Defaults to `configguard.config.ts`. |
-| `-h, --help` | Display CLI help. |
+| `-h, --help`   | Display CLI help.                                            |
 
 Paths are resolved relative to the current working directory unless absolute paths are supplied.
 
@@ -248,11 +248,11 @@ The CLI reads and parses the specified environment file. It does **not** automat
 
 ### Exit codes
 
-| Exit code | Meaning |
-|---|---|
-| `0` | Configuration validation succeeded. |
-| `1` | Configuration validation failed. |
-| `2` | An operational or command-line error occurred, such as a missing file or invalid arguments. |
+| Exit code | Meaning                                                                                     |
+| --------- | ------------------------------------------------------------------------------------------- |
+| `0`       | Configuration validation succeeded.                                                         |
+| `1`       | Configuration validation failed.                                                            |
+| `2`       | An operational or command-line error occurred, such as a missing file or invalid arguments. |
 
 ### CLI security note
 
