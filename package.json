@@ -3,7 +3,7 @@
     "configguard": "./dist/cli/index.js"
   },
   "name": "@aousaja/configguard",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Validate application configuration before deployment",
   "license": "MIT",
   "author": "Aousaja",
