@@ -9,10 +9,14 @@ Usage:
   configguard validate --env <path>
   configguard validate --schema <path>
   configguard validate --env <path> --schema <path>
+  configguard validate --include-process-env
 
 Options:
   -e, --env       Environment file (default: .env)
   -s, --schema    TypeScript schema (default: configguard.config.ts)
+      --include-process-env
+                  Include runtime environment variables.
+                  Runtime values override values from the environment file.
   -h, --help      Show help
 
 The schema file must export a named configSchema.

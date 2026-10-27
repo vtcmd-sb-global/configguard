@@ -32,11 +32,15 @@ export const configSchema = z.object({
   return directory;
 }
 
-function runCli(directory, args) {
+function runCli(directory, args, envOverrides = {}) {
   return spawnSync(process.execPath, [cliPath, ...args], {
     cwd: directory,
     encoding: "utf8",
     timeout: 15_000,
+    env: {
+      ...process.env,
+      ...envOverrides,
+    },
   });
 }
 
@@ -113,6 +117,117 @@ test("CLI reports a missing environment file as an operational error", async () 
 
     const output = `${result.stdout}\n${result.stderr}`;
     assert.match(output, /Unable to read environment file/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI includes runtime environment variables when requested", async () => {
+  const directory = await createFixture();
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=3000",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, ["validate", "--include-process-env"], {
+      NODE_ENV: "test",
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Configuration is valid/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("runtime environment variables override .env values", async () => {
+  const directory = await createFixture();
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=not-a-number",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "NODE_ENV=test",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, ["validate", "--include-process-env"], {
+      PORT: "8080",
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Configuration is valid/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI does not expose invalid runtime environment values", async () => {
+  const directory = await createFixture();
+  const secret = "runtime-secret-do-not-print";
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=3000",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "NODE_ENV=test",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, ["validate", "--include-process-env"], {
+      NODE_ENV: secret,
+    });
+
+    const output = `${result.stdout}\n${result.stderr}`;
+
+    assert.equal(result.status, 1);
+    assert.match(output, /NODE_ENV/);
+    assert.doesNotMatch(output, new RegExp(secret));
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI ignores runtime environment variables by default", async () => {
+  const directory = await createFixture();
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=3000",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "NODE_ENV=test",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, ["validate"], {
+      NODE_ENV: "invalid-runtime-value",
+    });
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Configuration is valid/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

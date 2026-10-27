@@ -6,12 +6,17 @@ import { readEnvFile } from "./read-env.js";
 export async function runValidate(
   envPath: string,
   schemaPath: string,
+  includeProcessEnv = false,
 ): Promise<number> {
   try {
-    const [config, schema] = await Promise.all([
+    const [fileConfig, schema] = await Promise.all([
       readEnvFile(envPath),
       loadSchema(schemaPath),
     ]);
+
+    const config = includeProcessEnv
+      ? { ...fileConfig, ...process.env }
+      : fileConfig;
 
     const result = validateConfig(config, schema);
 

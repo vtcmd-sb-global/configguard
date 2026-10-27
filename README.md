@@ -236,15 +236,30 @@ npm exec --yes --package=@aousaja/configguard -- configguard --help
 
 ### CLI options
 
-| Option         | Description                                                  |
-| -------------- | ------------------------------------------------------------ |
-| `-e, --env`    | Environment file path. Defaults to `.env`.                   |
-| `-s, --schema` | TypeScript schema path. Defaults to `configguard.config.ts`. |
-| `-h, --help`   | Display CLI help.                                            |
+| Option                  | Description                                                                 |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `-e, --env`             | Environment file path. Defaults to `.env`.                                  |
+| `-s, --schema`          | TypeScript schema path. Defaults to `configguard.config.ts`.                |
+| `--include-process-env` | Include runtime environment variables; runtime values override file values. |
+| `-h, --help`            | Display CLI help.                                                           |
 
 Paths are resolved relative to the current working directory unless absolute paths are supplied.
 
-The CLI reads and parses the specified environment file. It does **not** automatically merge values from `process.env`.
+By default, the CLI validates values read from the specified environment file only. It does **not** automatically merge values from `process.env`.
+
+To include runtime environment variables, use the `--include-process-env` flag:
+
+```bash
+npx configguard validate --include-process-env
+```
+
+You can combine this flag with custom environment-file and schema paths:
+
+```bash
+npx configguard validate --env .env.production --schema config/schema.ts --include-process-env
+```
+
+When enabled, runtime environment variables override values with the same names in the environment file. This is useful when validating configuration in CI/CD pipelines or deployment environments.
 
 ### Exit codes
 

@@ -13,7 +13,11 @@ async function main(): Promise<void> {
       return;
     }
 
-    process.exitCode = await runValidate(options.envPath, options.schemaPath);
+    process.exitCode = await runValidate(
+      options.envPath,
+      options.schemaPath,
+      options.includeProcessEnv,
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "An unexpected error occurred.";

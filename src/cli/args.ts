@@ -3,6 +3,7 @@ export interface CliOptions {
   envPath: string;
   schemaPath: string;
   help: boolean;
+  includeProcessEnv: boolean;
 }
 
 export function parseArgs(args: string[]): CliOptions {
@@ -11,6 +12,7 @@ export function parseArgs(args: string[]): CliOptions {
     envPath: ".env",
     schemaPath: "configguard.config.ts",
     help: false,
+    includeProcessEnv: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -18,6 +20,11 @@ export function parseArgs(args: string[]): CliOptions {
 
     if (arg === "--help" || arg === "-h") {
       options.help = true;
+      continue;
+    }
+
+    if (arg === "--include-process-env") {
+      options.includeProcessEnv = true;
       continue;
     }
 
