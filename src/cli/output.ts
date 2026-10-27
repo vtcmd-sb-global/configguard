@@ -1,4 +1,4 @@
-export function printHelp(): void {
+﻿export function printHelp(): void {
   console.log(`
 ConfigGuard CLI
 
@@ -10,6 +10,7 @@ Usage:
   configguard validate --schema <path>
   configguard validate --env <path> --schema <path>
   configguard validate --include-process-env
+  configguard validate --strict
 
 Options:
   -e, --env       Environment file (default: .env)
@@ -17,6 +18,8 @@ Options:
       --include-process-env
                   Include runtime environment variables.
                   Runtime values override values from the environment file.
+      --strict    Reject unknown top-level keys in the environment file.
+                  Requires a Zod object schema.
   -h, --help      Show help
 
 The schema file must export a named configSchema.

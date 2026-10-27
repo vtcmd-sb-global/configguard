@@ -232,3 +232,116 @@ test("CLI ignores runtime environment variables by default", async () => {
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+
+test("CLI strict mode rejects unknown environment keys without exposing values", async () => {
+  const directory = await createFixture();
+  const secret = "unknown-key-secret-do-not-print";
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=3000",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "NODE_ENV=test",
+        `DATABSE_URL=${secret}`,
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, ["validate", "--strict"]);
+    const output = `${result.stdout}\n${result.stderr}`;
+
+    assert.equal(result.status, 1);
+    assert.match(output, /DATABSE_URL/);
+    assert.doesNotMatch(output, new RegExp(secret));
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI strict mode accepts configuration with only declared keys", async () => {
+  const directory = await createFixture();
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=3000",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "NODE_ENV=test",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, ["validate", "--strict"]);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Configuration is valid/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI allows unknown environment keys when strict mode is disabled", async () => {
+  const directory = await createFixture();
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=3000",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "NODE_ENV=test",
+        "OPTIONAL_EXTRA=value",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, ["validate"]);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Configuration is valid/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI strict mode ignores unrelated runtime environment keys", async () => {
+  const directory = await createFixture();
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=3000",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "NODE_ENV=test",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(
+      directory,
+      ["validate", "--strict", "--include-process-env"],
+      {
+        NODE_ENV: "test",
+        CONFIGGUARD_TEST_RUNTIME_EXTRA: "ignored",
+      },
+    );
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Configuration is valid/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});

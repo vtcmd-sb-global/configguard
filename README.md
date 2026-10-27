@@ -241,11 +241,26 @@ npm exec --yes --package=@aousaja/configguard -- configguard --help
 | `-e, --env`             | Environment file path. Defaults to `.env`.                                  |
 | `-s, --schema`          | TypeScript schema path. Defaults to `configguard.config.ts`.                |
 | `--include-process-env` | Include runtime environment variables; runtime values override file values. |
+| `--strict`              | Reject unknown top-level keys in the environment file; requires a Zod object schema. |
 | `-h, --help`            | Display CLI help.                                                           |
 
 Paths are resolved relative to the current working directory unless absolute paths are supplied.
 
 By default, the CLI validates values read from the specified environment file only. It does **not** automatically merge values from `process.env`.
+
+Strict mode checks the keys in the environment file against the top-level keys declared in your Zod object schema. Unknown keys cause validation to fail. Values are never printed. Strict mode is disabled by default.
+
+Enable it with:
+
+```bash
+npx configguard validate --strict
+```
+
+You can combine strict mode with runtime environment variables. Strict key checking still applies only to the environment file:
+
+```bash
+npx configguard validate --strict --include-process-env
+```
 
 To include runtime environment variables, use the `--include-process-env` flag:
 

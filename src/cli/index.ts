@@ -17,6 +17,7 @@ async function main(): Promise<void> {
       options.envPath,
       options.schemaPath,
       options.includeProcessEnv,
+      options.strict,
     );
   } catch (error) {
     const message =
