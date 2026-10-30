@@ -233,7 +233,6 @@ test("CLI ignores runtime environment variables by default", async () => {
   }
 });
 
-
 test("CLI strict mode rejects unknown environment keys without exposing values", async () => {
   const directory = await createFixture();
   const secret = "unknown-key-secret-do-not-print";
@@ -344,4 +343,144 @@ test("CLI strict mode ignores unrelated runtime environment keys", async () => {
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("CLI outputs valid JSON for successful validation", async () => {
+  const directory = await createFixture();
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=3000",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "NODE_ENV=test",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, ["validate", "--format", "json"]);
+
+    assert.equal(result.status, 0, result.stderr);
+
+    const output = JSON.parse(result.stdout);
+    assert.deepEqual(output, { success: true, errors: [] });
+    assert.equal(result.stderr, "");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI outputs JSON validation errors without exposing secrets", async () => {
+  const directory = await createFixture();
+  const secret = "json-secret-do-not-print";
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        `APP_NAME=${secret}`,
+        "PORT=not-a-number",
+        "DATABASE_URL=",
+        "NODE_ENV=invalid",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, ["validate", "--format", "json"]);
+
+    assert.equal(result.status, 1);
+
+    const output = JSON.parse(result.stdout);
+    assert.equal(output.success, false);
+    assert.ok(output.errors.length > 0);
+    assert.ok(output.errors.some((error) => error.path === "PORT"));
+    assert.doesNotMatch(result.stdout, new RegExp(secret));
+    assert.equal(result.stderr, "");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI outputs JSON for strict-mode unknown keys without exposing values", async () => {
+  const directory = await createFixture();
+  const secret = "strict-json-secret-do-not-print";
+
+  try {
+    await writeFile(
+      join(directory, ".env"),
+      [
+        "APP_NAME=ConfigGuard Test",
+        "PORT=3000",
+        "DATABASE_URL=postgresql://localhost/testdb",
+        "NODE_ENV=test",
+        `DATABSE_URL=${secret}`,
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = runCli(directory, [
+      "validate",
+      "--strict",
+      "--format",
+      "json",
+    ]);
+
+    assert.equal(result.status, 1);
+
+    const output = JSON.parse(result.stdout);
+    assert.equal(output.success, false);
+    assert.ok(output.errors.some((error) => error.path === "DATABSE_URL"));
+    assert.doesNotMatch(result.stdout, new RegExp(secret));
+    assert.equal(result.stderr, "");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI outputs JSON for operational errors", async () => {
+  const directory = await createFixture();
+
+  try {
+    const result = runCli(directory, [
+      "validate",
+      "--env",
+      ".env.missing",
+      "--format",
+      "json",
+    ]);
+
+    assert.equal(result.status, 2);
+
+    const output = JSON.parse(result.stdout);
+    assert.equal(output.success, false);
+    assert.ok(
+      output.errors.some((error) =>
+        error.message.includes("Unable to read environment file"),
+      ),
+    );
+    assert.equal(result.stderr, "");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI rejects unsupported output formats", () => {
+  const result = runCli(projectRoot, ["validate", "--format", "xml"]);
+
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /requires either "text" or "json"/);
+  assert.equal(result.stdout, "");
+});
+
+test("CLI rejects a missing output format", () => {
+  const result = runCli(projectRoot, ["validate", "--format"]);
+
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /requires either "text" or "json"/);
+  assert.equal(result.stdout, "");
 });

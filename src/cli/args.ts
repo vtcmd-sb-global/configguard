@@ -1,10 +1,13 @@
-﻿export interface CliOptions {
+﻿export type OutputFormat = "text" | "json";
+
+export interface CliOptions {
   command: string;
   envPath: string;
   schemaPath: string;
   help: boolean;
   includeProcessEnv: boolean;
   strict: boolean;
+  format: OutputFormat;
 }
 
 export function parseArgs(args: string[]): CliOptions {
@@ -15,6 +18,7 @@ export function parseArgs(args: string[]): CliOptions {
     help: false,
     includeProcessEnv: false,
     strict: false,
+    format: "text",
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -32,6 +36,17 @@ export function parseArgs(args: string[]): CliOptions {
 
     if (arg === "--strict") {
       options.strict = true;
+      continue;
+    }
+
+    if (arg === "--format") {
+      const value = args[++i];
+
+      if (value !== "text" && value !== "json") {
+        throw new Error(`${arg} requires either "text" or "json".`);
+      }
+
+      options.format = value;
       continue;
     }
 

@@ -1,7 +1,13 @@
 ﻿import { z } from "zod";
 import { validateConfig } from "../index.js";
 import { loadSchema } from "./load-schema.js";
-import { printErrors, printSuccess } from "./output.js";
+import {
+  printErrors,
+  printFailure,
+  printSuccess,
+  type ValidationError,
+} from "./output.js";
+import type { OutputFormat } from "./args.js";
 import { readEnvFile } from "./read-env.js";
 
 export async function runValidate(
@@ -9,6 +15,7 @@ export async function runValidate(
   schemaPath: string,
   includeProcessEnv = false,
   strict = false,
+  format: OutputFormat = "text",
 ): Promise<number> {
   try {
     const [fileConfig, schema] = await Promise.all([
@@ -29,9 +36,12 @@ export async function runValidate(
       );
 
       if (unknownKeys.length > 0) {
-        console.error(
-          `ConfigGuard: Unknown environment keys: ${unknownKeys.join(", ")}`,
-        );
+        const errors: ValidationError[] = unknownKeys.map((key) => ({
+          path: key,
+          message: "Unknown environment key.",
+        }));
+
+        printErrors(errors, format);
         return 1;
       }
     }
@@ -43,17 +53,17 @@ export async function runValidate(
     const result = validateConfig(config, schema);
 
     if (!result.success) {
-      printErrors(result.errors);
+      printErrors(result.errors, format);
       return 1;
     }
 
-    printSuccess();
+    printSuccess(format);
     return 0;
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "An unexpected error occurred.";
 
-    console.error(`ConfigGuard: ${message}`);
+    printFailure(message, format);
     return 2;
   }
 }

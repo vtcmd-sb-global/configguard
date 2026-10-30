@@ -236,13 +236,14 @@ npm exec --yes --package=@aousaja/configguard -- configguard --help
 
 ### CLI options
 
-| Option                  | Description                                                                 |
-| ----------------------- | --------------------------------------------------------------------------- |
-| `-e, --env`             | Environment file path. Defaults to `.env`.                                  |
-| `-s, --schema`          | TypeScript schema path. Defaults to `configguard.config.ts`.                |
-| `--include-process-env` | Include runtime environment variables; runtime values override file values. |
-| `--strict`              | Reject unknown top-level keys in the environment file; requires a Zod object schema. |
-| `-h, --help`            | Display CLI help.                                                           |
+| Option                  | Description                                       |
+| ----------------------- | ------------------------------------------------- |
+| `-e, --env`             | Environment file path. Defaults to `.env`.        |
+| `-s, --schema`          | Schema path. Defaults to `configguard.config.ts`. |
+| `--include-process-env` | Include runtime environment variables.            |
+| `--strict`              | Reject unknown environment keys.                  |
+| `--format`              | Output format: `text` (default) or `json`.        |
+| `-h, --help`            | Display CLI help.                                 |
 
 Paths are resolved relative to the current working directory unless absolute paths are supplied.
 
@@ -276,6 +277,47 @@ npx configguard validate --env .env.production --schema config/schema.ts --inclu
 
 When enabled, runtime environment variables override values with the same names in the environment file. This is useful when validating configuration in CI/CD pipelines or deployment environments.
 
+### JSON output
+
+By default, ConfigGuard displays human-readable text output. You can use `--format json` to receive machine-readable JSON instead.
+
+```bash
+npx configguard validate --format json
+```
+
+You can combine JSON output with other CLI options:
+
+```bash
+npx configguard validate --env .env.production --schema config/schema.ts --strict --format json
+```
+
+When validation succeeds, ConfigGuard returns:
+
+```json
+{
+  "success": true,
+  "errors": []
+}
+```
+
+When validation fails, it returns structured errors:
+
+```json
+{
+  "success": false,
+  "errors": [
+    {
+      "path": "PORT",
+      "message": "..."
+    }
+  ]
+}
+```
+
+Operational errors encountered during validation are also returned using the same JSON structure. Invalid command-line arguments are reported as text errors.
+
+JSON output is written to standard output, making it suitable for CI/CD pipelines, scripts, and other automated tools. Configuration values are never included in validation error output.
+
 ### Exit codes
 
 | Exit code | Meaning                                                                                     |
@@ -283,6 +325,8 @@ When enabled, runtime environment variables override values with the same names 
 | `0`       | Configuration validation succeeded.                                                         |
 | `1`       | Configuration validation failed.                                                            |
 | `2`       | An operational or command-line error occurred, such as a missing file or invalid arguments. |
+
+These exit codes remain the same regardless of whether you use the default text output or `--format json`.
 
 ### CLI security note
 
